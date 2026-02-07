@@ -6,62 +6,66 @@ const display = document.getElementById('display');
 const startBtn = document.getElementById('startBtn');
 const resetBtn = document.getElementById('resetBtn');
 
-// 音を鳴らす関数
-function playSound(frequency, volume, duration) {
-    // ★ Chrome対策: ボタンを押した時に初めてコンテキストを作成または再開する
-    if (!audioCtx) {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    }
+// 音楽的な音を鳴らす関数
+function playNote(freq, volume, duration, type = 'sine') {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
     
-    // コンテキストが停止していたら再開させる
-    if (audioCtx.state === 'suspended') {
-        audioCtx.resume();
-    }
+    // 音の出だしを柔らかく、終わりを余韻のある形に
+    gain.gain.setValueAtTime(0, audioCtx.currentTime);
+    gain.gain.linearRampToValueAtTime(volume, audioCtx.currentTime + 0.05);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
 
-    const oscillator = audioCtx.createOscillator();
-    const gainNode = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
 
-    oscillator.type = 'sine';
-    oscillator.frequency.setValueAtTime(frequency, audioCtx.currentTime);
-    
-    gainNode.gain.setValueAtTime(volume, audioCtx.currentTime);
-    // 音の終わりを滑らかにする
-    gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
-
-    oscillator.connect(gainNode);
-    gainNode.connect(audioCtx.destination);
-
-    oscillator.start();
-    oscillator.stop(audioCtx.currentTime + duration);
+    osc.start();
+    osc.stop(audioCtx.currentTime + duration);
 }
 
-// タイマー開始
+// カフェ風の和音を鳴らす（ド・ミ・ソ・シ など）
+function playJazzChord(tick) {
+    const chords = [
+        [261.63, 329.63, 392.00, 493.88], // Cmaj7 (ドミソシ)
+        [349.23, 440.00, 523.25, 659.25]  // Fmaj7 (ファラドミ)
+    ];
+    
+    // 4秒ごとにコードを変える
+    const currentChord = chords[Math.floor(tick / 4) % chords.length];
+    
+    // リズムに合わせて和音の中の1音をランダムに鳴らす
+    const freq = currentChord[Math.floor(Math.random() * currentChord.length)];
+    playNote(freq, 0.05, 1.5);
+}
+
 startBtn.addEventListener('click', () => {
     if (timerId !== null) return;
-
-    // ★ 最初に一瞬だけ無音に近い音を鳴らして、ブラウザの音再生許可を得る
-    playSound(440, 0.05, 0.1); 
 
     timerId = setInterval(() => {
         timeLeft--;
         updateDisplay();
-        
-        // 動作中のクリック音
-        playSound(150, 0.02, 0.05);
+
+        // 毎秒、和音を奏でる
+        playJazzChord(timeLeft);
 
         if (timeLeft <= 0) {
             clearInterval(timerId);
             timerId = null;
-            // アラーム音
-            [660, 660, 660].forEach((f, i) => {
-                setTimeout(() => playSound(f, 0.1, 0.2), i * 300);
+            // 終了アラーム（メロディアスに）
+            [523, 659, 783, 1046].forEach((f, i) => {
+                setTimeout(() => playNote(f, 0.1, 1, 'triangle'), i * 200);
             });
             alert("コーヒーが完成しました！");
         }
     }, 1000);
 });
 
-// リセットは以前と同じ
 resetBtn.addEventListener('click', () => {
     clearInterval(timerId);
     timerId = null;
