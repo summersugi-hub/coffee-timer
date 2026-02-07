@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minimal Coffee & Chill</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>Coffee & Music</h1>
+            <p>静かなひとときを、お気に入りの一杯と。</p>
+        </header>
+
+        <main>
+            <section class="timer-card">
+                <h2>Brewing Timer</h2>
+                <div id="display">03:00</div>
+                <div class="controls">
+                    <button id="startBtn">Start</button>
+                    <button id="resetBtn">Reset</button>
+                </div>
+            </section>
+
+            <section class="music-card">
+                <h2>Now Playing</h2>
+                <p id="track-name">Favorite J-pop Mix</p>
+                <div class="visualizer">
+                    <span></span><span></span><span></span><span></span>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
