@@ -5,11 +5,16 @@ let audioCtx = null;
 const display = document.getElementById('display');
 const startBtn = document.getElementById('startBtn');
 const resetBtn = document.getElementById('resetBtn');
+const steams = document.querySelectorAll('.steam');
 
-// 音楽的な音を鳴らす関数
+// 音波を合成する関数
 function playNote(freq, volume, duration, type = 'sine') {
-    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    if (audioCtx.state === 'suspended') audioCtx.resume();
+    if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+    }
 
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
@@ -17,7 +22,6 @@ function playNote(freq, volume, duration, type = 'sine') {
     osc.type = type;
     osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
     
-    // 音の出だしを柔らかく、終わりを余韻のある形に
     gain.gain.setValueAtTime(0, audioCtx.currentTime);
     gain.gain.linearRampToValueAtTime(volume, audioCtx.currentTime + 0.05);
     gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
@@ -29,37 +33,44 @@ function playNote(freq, volume, duration, type = 'sine') {
     osc.stop(audioCtx.currentTime + duration);
 }
 
-// カフェ風の和音を鳴らす（ド・ミ・ソ・シ など）
-function playJazzChord(tick) {
+// J-pop/Jazz風の和音を自動生成
+function playGenerativeMusic(tick) {
     const chords = [
-        [261.63, 329.63, 392.00, 493.88], // Cmaj7 (ドミソシ)
-        [349.23, 440.00, 523.25, 659.25]  // Fmaj7 (ファラドミ)
+        [261.63, 329.63, 392.00, 493.88], // Cmaj7
+        [349.23, 440.00, 523.25, 659.25]  // Fmaj7
     ];
     
-    // 4秒ごとにコードを変える
     const currentChord = chords[Math.floor(tick / 4) % chords.length];
-    
-    // リズムに合わせて和音の中の1音をランダムに鳴らす
     const freq = currentChord[Math.floor(Math.random() * currentChord.length)];
-    playNote(freq, 0.05, 1.5);
+    
+    playNote(freq, 0.06, 2.0);
+}
+
+function updateDisplay() {
+    const minutes = Math.floor(timeLeft / 60);
+    const seconds = timeLeft % 60;
+    display.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 }
 
 startBtn.addEventListener('click', () => {
     if (timerId !== null) return;
 
+    // 湯気を表示
+    steams.forEach(s => s.style.opacity = "1");
+
     timerId = setInterval(() => {
         timeLeft--;
         updateDisplay();
-
-        // 毎秒、和音を奏でる
-        playJazzChord(timeLeft);
+        playGenerativeMusic(timeLeft);
 
         if (timeLeft <= 0) {
             clearInterval(timerId);
             timerId = null;
-            // 終了アラーム（メロディアスに）
+            steams.forEach(s => s.style.opacity = "0");
+            
+            // 終了アラーム
             [523, 659, 783, 1046].forEach((f, i) => {
-                setTimeout(() => playNote(f, 0.1, 1, 'triangle'), i * 200);
+                setTimeout(() => playNote(f, 0.1, 1.5, 'triangle'), i * 200);
             });
             alert("コーヒーが完成しました！");
         }
@@ -71,10 +82,5 @@ resetBtn.addEventListener('click', () => {
     timerId = null;
     timeLeft = 180;
     updateDisplay();
+    steams.forEach(s => s.style.opacity = "0");
 });
-
-function updateDisplay() {
-    const minutes = Math.floor(timeLeft / 60);
-    const seconds = timeLeft % 60;
-    display.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-}
