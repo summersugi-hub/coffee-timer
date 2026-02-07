@@ -68,11 +68,15 @@ startBtn.addEventListener('click', () => {
             timerId = null;
             steams.forEach(s => s.style.opacity = "0");
             
-            // 終了アラーム
+            // 1. まずアラームを鳴らす（約1秒間のメロディ）
             [523, 659, 783, 1046].forEach((f, i) => {
                 setTimeout(() => playNote(f, 0.1, 1.5, 'triangle'), i * 200);
             });
-            alert("コーヒーが完成しました！");
+            
+            // 2. 音が鳴り終わる頃（ここでは1.2秒後）にポップアップを出す
+            setTimeout(() => {
+                alert("コーヒーが完成しました！お疲れ様です。");
+            }, 1200); 
         }
     }, 1000);
 });
